@@ -1,17 +1,13 @@
-# Step 1, Input ✅
-# Step 2, layer break down ✅
-# Step 3, Section building 
-# Step 4, Stack respective sections
-# Step 5, Now that we have 6 shapes each representing one section per shape, we need to swap parts around to build our final shape. 
-
+#TreeNode class for finding groups in a shape
 class TreeNode:
     def __init__(self, value):
         self.value = value
         self.left = None
         self.right = None
         self.below = None  # New child for connections between layers
-
+# Machines class encapsulates the operations on shapes
 class machines:
+    # Mimic the behavior of stacking shapes found in Shapez 2
     def stack(s1, s2):
         if len(s1.shape) >= 6:
             return
@@ -22,22 +18,19 @@ class machines:
                     s2.shape[i][j] = "--"
         s2.update_groups_bfs()
 
-        def calculate_collision_distances(s1, s2):
-            # Returns a list of distances, one per group in s2
-            distances = []
-            for group2 in s2.groups:
-                min_distance = len(s1.shape)
-                for (x2, y2) in group2:
-                    for group1 in s1.groups:
-                        for (x1, y1) in group1:
-                            if y2 == y1:
-                                d = (x2 + len(s1.shape)) - x1 - 1
-                                if min_distance > d:
-                                    min_distance = d
-                distances.append(min_distance)
-            return distances
-
-        dists = calculate_collision_distances(s1, s2)
+       
+        # Returns a list of distances, one per group in s2
+        dists = []
+        for group2 in s2.groups:
+            min_distance = len(s1.shape)
+            for (x2, y2) in group2:
+                for group1 in s1.groups:
+                    for (x1, y1) in group1:
+                        if y2 == y1:
+                            d = (x2 + len(s1.shape)) - x1 - 1
+                            if min_distance > d:
+                                min_distance = d
+            dists.append(min_distance)
 
         # If all distances are zero, just stack and trim as before
         if all(dist == 0 for dist in dists):
@@ -82,19 +75,19 @@ class machines:
 
             s1.shape = new_shape
             return
-
+    # Mimic the behavior of painting shapes found in Shapez 2
     def paint(s1, color):
         for j in range(len(s1.shape[-1])):
             if s1.shape[-1][j] != "P-" and not "c" in s1.shape[-1][j][0] and s1.shape[-1][j] != "--":
                 s1.shape[-1][j] = s1.shape[-1][j][0] + color
         return
-    
+    # Mimic the behavior of generating crystals found in Shapez 2
     def gen_crystal(s1, color):
         for i in range(len(s1.shape)):
             for j in range(len(s1.shape[i])):
                 if s1.shape[i][j] == "--" or s1.shape[i][j] == "P-":
                     s1.shape[i][j] = f"c{color}"
-    
+    # Mimic the behavior of swapping two shapes found in Shapez 2
     def swap(s1, s2):
         # return true if s1 layers are less or equal to s2 layers
         if len(s1.shape) <= len(s2.shape):
@@ -144,7 +137,7 @@ class machines:
             s1.shape.insert(0, blank.shape[0])
         else:
             s1.shape.insert(0, blank.shape[0])
-
+# Shape class holds data relating to shapes and computes groups on shape creation
 class shape:
     def __init__(self, shape_code: str):
         self._shape = self.decode_shape(shape_code)
@@ -163,6 +156,7 @@ class shape:
     def groups(self):
         return self._groups
 
+    # Creates a matrix of found group coordinates
     def collapse_tree_to_list(self, node):
         if node is None:
             return []
@@ -176,6 +170,7 @@ class shape:
         # Sort the list first by x (row) and then by y (column)
         return sorted(result, key=lambda coord: (coord[0], coord[1]))
 
+    # Using BFS, find all groups stemming from the top layer
     def update_groups_bfs(self):
         rows = len(self._shape)
         cols = len(self._shape[0])
@@ -227,6 +222,7 @@ class shape:
             all_coords.append(group_coords)
         self._groups = all_coords
 
+    # Converts shape code into a matrix
     def decode_shape(self, shape_code: str):
         s = []
         if ":" in shape_code:
@@ -239,5 +235,5 @@ class shape:
         return s
 
     def __str__(self):
-        # Flatten the nested lists and concatenate the string pairs
+        # Converts shape matrix into shape code
         return ':'.join([''.join(layer) for layer in self.shape])
