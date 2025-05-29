@@ -6,7 +6,7 @@ class TreeNode:
         self.right = None
         self.below = None  # New child for connections between layers
 # Machines class encapsulates the operations on shapes
-class machines:
+class Machines:
     # Mimic the behavior of stacking shapes found in Shapez 2
     def stack(s1, s2):
         if len(s1.shape) >= 6:
@@ -67,7 +67,116 @@ class machines:
                 if s1.shape[i][j] == "--" or s1.shape[i][j] == "P-":
                     s1.shape[i][j] = f"c{color}"
     # Mimic the behavior of swapping two shapes found in Shapez 2
-    def swap(s1, s2):
+    
+    def rotate_cw(s1):
+        # Rotate the shape clockwise by moving the last index to the first index
+        for i in range(len(s1.shape)):
+            s1.shape[i] = [s1.shape[i][-1]] + s1.shape[i][:-1]
+        return
+
+    def rotate_ccw(s1):
+        # Rotate the shape counter-clockwise by moving the first index to the last index
+        for i in range(len(s1.shape)):
+            s1.shape[i] = s1.shape[i][1:] + [s1.shape[i][0]]
+        return
+        
+    def rotate_180(s1):
+        # Rotate the shape 180 degrees by moving the last index to the front 3 times
+        for i in range(len(s1.shape)):
+            for _ in range(3):  # Repeat the operation 3 times
+                s1.shape[i] = [s1.shape[i][-1]] + s1.shape[i][:-1]
+        return
+        
+    def pin(s1):
+        blank = shape("------------")
+        for i in range(len(s1.shape[0])):
+            if s1.shape[0][i] != "--":
+                blank.shape[0][i] = "P-"
+        if len(s1.shape) == 6:
+            s1.shape.pop()
+            s1.shape.insert(0, blank.shape[0])
+        else:
+            s1.shape.insert(0, blank.shape[0])
+
+
+    # hidden function for all cutter operations
+    def _destroy_crystals_when_cutting(self, s1):
+        def _search_and_destroy(s1, x, y):
+            s1.shape[x][y] = "--"
+            if s1.shape[x][y-1][0] == "c":
+                _search_and_destroy(s1, x, y-1)
+            if s1.shape[x][y+1][0] == "c":
+                _search_and_destroy(s1, x, y+1)
+            if s1.shape[x-1][y][0] == "c":
+                _search_and_destroy(s1, x-1, y)
+            if s1.shape[x+1][y][0] == "c":
+                _search_and_destroy(s1, x+1, y)
+        
+        for i in range(len(s1.shape)):
+            # check for connected crystals on the cut
+            if s1.shape[i][2][0] == "c" and s1.shape[i][3][0] == "c":
+                _search_and_destroy(s1, i, 2)
+            elif s1.shape[i][0][0] == "c" and s1.shape[i][5][0] == "c":
+                _search_and_destroy(s1, i, 0)
+                
+        return s1
+
+    
+    def _apply_gravity_single_shape(self, s1):
+        s1.update_groups_bfs()
+        new_shape = [["--"] * len(s1.shape[0]) for _ in range(len(s1.shape))] 
+
+        # Drop all group nodes from s2 by their calculated distance
+        for group in s1.groups:
+            # Find the max drop for this group
+            max_drop = 0
+            while True:
+                can_drop = True
+                for (x1, y1) in group:
+                    if x1 == 0:
+                        can_drop = False
+                        continue
+                    val = s1.shape[x1][y1]
+                    target_x = x1 +  max_drop
+                    # Check if we are at the bottom or if the cell below is occupied
+                    if target_x == 0 or new_shape[target_x - 1][y1] != "--":
+                        can_drop = False
+                        break
+                if can_drop:
+                    max_drop -= 1
+                else:
+                    break
+            for (x1, y1) in group:
+                val = s1.shape[x1][y1]
+                if val != "--":
+                    target_x = x1 + max_drop
+                    if target_x != x1 and val[0] == "c":
+                        new_shape[target_x][y1] = "--"
+                    new_shape[target_x][y1] = val
+                
+    
+    def _cut(self, s1):
+        self._destroy_crystals_when_cutting(s1)
+        self._apply_gravity_single_shape(s1)
+        new_s1 = []
+        new_s2 = []
+        for i in range(len(s1.shape)):
+            new_s1.append(s1.shape[i][0:3] + ["--", "--", "--"])
+            new_s2.append(["--", "--", "--"] + s1.shape[i][3:])
+
+        return (new_s1, new_s2)
+
+    def Half_Destroyer(self, s1):
+        return self._cut(s1)[0]
+    
+    def Slicer(self, s1):
+        return self._cut(s1)
+    
+    def swap(self, s1, s2):
+        self._destroy_crystals_when_cutting(s1)
+        self._destroy_crystals_when_cutting(s2)
+        self._apply_gravity_single_shape(s1)
+        self._apply_gravity_single_shape(s2)
         # return true if s1 layers are less or equal to s2 layers
         if len(s1.shape) <= len(s2.shape):
             for i in range(len(s1.shape)):
@@ -87,35 +196,49 @@ class machines:
             for i in range(len(s1.shape) - len(s2.shape)):
                 s2.shape.append(["--", "--", "--"] + s1.shape[len(s2.shape) + i][3:])
             return
+               
+# Wires class to handle the behavior of wires and associated operations
+class Wires:
+    def AND_GATE(w1, w2):
+        if w1 and w2:
+            return True
+        return False
+    
+    def OR_GATE(w1, w2):
+        if w1 or w2:
+            return True
+        return False
+    
+    def NOT_GATE(w1):
+        if w1:
+            return False
+        return True
+    
+    def XOR_GATE(w1, w2):
+        if (w1 and not w2) or (not w1 and w2):
+            return True
+        return False
+    
+    def COMPARISON_GATE(w1, w2, type):
+        if type == "EQ":
+            return w1 == w2
+        elif type == "NEQ":
+            return w1 != w2
+        elif type == "GT":
+            return w1 > w2
+        elif type == "GTE":
+            return w1 >= w2
+        elif type == "LT":
+            return w1 < w2
+        elif type == "LTE":
+            return w1 <= w2
 
-    def rotate_cw(s1):
-        # Rotate the shape clockwise by moving the last index to the first index
-        for i in range(len(s1.shape)):
-            s1.shape[i] = [s1.shape[i][-1]] + s1.shape[i][:-1]
-        return
-
-    def rotate_ccw(s1):
-        # Rotate the shape counter-clockwise by moving the first index to the last index
-        for i in range(len(s1.shape)):
-            s1.shape[i] = s1.shape[i][1:] + [s1.shape[i][0]]
-        return
-    def rotate_180(s1):
-        # Rotate the shape 180 degrees by moving the last index to the front 3 times
-        for i in range(len(s1.shape)):
-            for _ in range(3):  # Repeat the operation 3 times
-                s1.shape[i] = [s1.shape[i][-1]] + s1.shape[i][:-1]
-        return
+    def GATE(w1, w2):
+        if w2:
+            return w1
+        return None
         
-    def pin(s1):
-        blank = shape("------------")
-        for i in range(len(s1.shape[0])):
-            if s1.shape[0][i] != "--":
-                blank.shape[0][i] = "P-"
-        if len(s1.shape) == 6:
-            s1.shape.pop()
-            s1.shape.insert(0, blank.shape[0])
-        else:
-            s1.shape.insert(0, blank.shape[0])
+
 # Shape class holds data relating to shapes and computes groups on shape creation
 class shape:
     def __init__(self, shape_code: str):
@@ -209,7 +332,7 @@ class shape:
         return ':'.join([''.join(layer) for layer in self.shape])
 
 
-s1 = shape("P-----------")
-s2 = shape("HuHu--------:--HuHu------:----HuHu----:------HuHu--:--------HuHu")
-machines.stack(s1, s2)
+s1 = shape("HuHucrcrHuHu:HucrcrHuHuHu")
+M = Machines()
+M._cut(s1)
 print(s1)
