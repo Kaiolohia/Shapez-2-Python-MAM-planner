@@ -15,9 +15,3 @@ INPUT = "P-----------:HuHu--------:--HuHu------:----HuHu----:------HuHu--:------
 # Desired output is a way to decode shapes and edge cases in order to create a sequence of operations to achecive input shape.
 # Swapping corners covers a lot of edge cases due to it allowing floating shapes but does not allow for floating pins and crytals built in this manner tend to over flow.
 # Hanging crystals can exist through the use of claw and hyrbid methods described in the S2 Discord
-
-class TMAM:
-    def __init__(self, input_shape_code: str):
-        self.input_shape = S_(input_shape_code)
-        
-
