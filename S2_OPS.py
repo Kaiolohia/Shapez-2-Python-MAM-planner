@@ -240,32 +240,47 @@ class Wires:
 
 class Virtual_Machines:
     def stack(left, right):
-        Machines.stack(left, right)
-        top = left.shape
-        return top
+        try:
+            Machines.stack(left, right)
+            top = left.shape
+            return top
+        except:
+            return None
     
     def unstack(bottom):
-        left = bottom.shape.pop()
-        right = bottom.shape
-        return [left, right]
-
+        try:
+            left = shape(bottom.shape.pop())
+            right = bottom.shape
+            return [left, right]
+        except:
+            return None
     def paint(bottom, left):
-        Machines.paint(bottom, left)
-        top = bottom.shape
-        return top
+        try:
+            Machines.paint(bottom, left)
+            top = bottom
+            return top
+        except:
+            return None
     
     def gen_crystal(bottom, left):
-        Machines.gen_crystal(bottom, left)
-        top = bottom.shape
-        return top
+        try:
+            Machines.gen_crystal(bottom, left)
+            top = bottom
+            return top
+        except:
+            return None
     
     def shape_analyzer(bottom):
-        if bottom.shape[-1][0][0] not in ["-", "P"]:
-            top = [(bottom.shape[-1][0][0] + "u") + "----------"]
-        else:
-            top = [(bottom.shape[-1][0][0] + "-") + "----------"]
-        left = bottom.shape[-1][0][1]
-        return [top, left]
+        try:
+            if bottom.shape[-1][0][0] not in ["-", "P"]:
+                top = shape((bottom.shape[-1][0][0] + "u") + "----------")
+                left = bottom.shape[-1][0][1]
+            else:
+                top = shape((bottom.shape[-1][0][0] + "-") + "----------")
+                left = bottom.shape[-1][0][1]
+            return [top, left]
+        except:
+            return None
 # Shape class holds data relating to shapes and computes groups on shape creation
 class shape:
     def __init__(self, shape_code: str):
