@@ -9,8 +9,6 @@ class TreeNode:
 class Machines:
     # Mimic the behavior of stacking shapes found in Shapez 2
     def stack(s1, s2):
-        if len(s1.shape) >= 6:
-            return
         # Break crystals on top shape, triggers a recalculation on groups.
         for i in range(len(s2.shape)):
             for j in range(len(s2.shape[i])):
@@ -99,7 +97,7 @@ class Machines:
             s1.shape.insert(0, blank.shape[0])
 
 
-    # hidden function for all cutter operations
+    # hidden function for all cutter operations, destroys crystals that are cut and all adjactent crystals through recursian.
     def _destroy_crystals_when_cutting(self, s1):
         def _search_and_destroy(s1, x, y):
             s1.shape[x][y] = "--"
@@ -238,7 +236,36 @@ class Wires:
             return w1
         return None
         
+# Virtual machines will always return a top output, and sometimes a left output depending on the operation
 
+class Virtual_Machines:
+    def stack(left, right):
+        Machines.stack(left, right)
+        top = left.shape
+        return top
+    
+    def unstack(bottom):
+        left = bottom.shape.pop()
+        right = bottom.shape
+        return [left, right]
+
+    def paint(bottom, left):
+        Machines.paint(bottom, left)
+        top = bottom.shape
+        return top
+    
+    def gen_crystal(bottom, left):
+        Machines.gen_crystal(bottom, left)
+        top = bottom.shape
+        return top
+    
+    def shape_analyzer(bottom):
+        if bottom.shape[-1][0][0] not in ["-", "P"]:
+            top = [(bottom.shape[-1][0][0] + "u") + "----------"]
+        else:
+            top = [(bottom.shape[-1][0][0] + "-") + "----------"]
+        left = bottom.shape[-1][0][1]
+        return [top, left]
 # Shape class holds data relating to shapes and computes groups on shape creation
 class shape:
     def __init__(self, shape_code: str):
@@ -330,9 +357,3 @@ class shape:
     def __str__(self):
         # Converts shape matrix into shape code
         return ':'.join([''.join(layer) for layer in self.shape])
-
-
-s1 = shape("HuHucrcrHuHu:HucrcrHuHuHu")
-M = Machines()
-M._cut(s1)
-print(s1)
